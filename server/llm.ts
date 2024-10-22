@@ -1,9 +1,17 @@
-import { generateObject, streamObject } from "ai";
+import { generateObject } from "ai";
+import { createGroq } from "@ai-sdk/groq";
 import { createOllama } from "ollama-ai-provider";
 import z from "zod";
 
-const model = createOllama({
-  baseURL: "http://127.0.0.1:11434/api",
+const token = "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";
+
+// const model = createOllama({
+//   baseURL: "http://127.0.0.1:11434/api",
+// });
+
+const model = createGroq({
+  // custom settings
+  apiKey: token,
 });
 
 export const getResumeResult = async (resume: string) => {
@@ -78,7 +86,7 @@ export const getResumeResult = async (resume: string) => {
   });
 
   const result = await generateObject({
-    model: model("qwen2.5-coder"),
+    model: model("llama-3.1-70b-versatile"),
     system: systemPrompt,
     prompt: "Give all the details in sections",
     schema: outputJsonFormat,
