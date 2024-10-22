@@ -1,6 +1,10 @@
 "use client";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { PDFViewer, Font } from "@react-pdf/renderer";
+import { Textarea } from "./ui/textarea";
+import { Button } from "./ui/button";
+import { useState } from "react";
+import axios from "axios";
 
 Font.register({
   family: "CormorantGaramond",
@@ -273,48 +277,34 @@ const WorkExperience = ({ workExp }: { workExp: WorkExperience }) => {
   );
 };
 
-const resumeInfo: Resume = {
-  resume: {
-    name: "Sujapriya Sakthivel",
-    position: "MERN Stack Developer",
-    communication: {
-      address: { city: "Chennai", country: "India" },
-      email: "sujapriyasakthivel806@gmail.com",
-      phoneNumber: "9360129050",
-      linkedin: "https://www.linkedin.com/in/suja-priya-9332811bb/",
-      github: "https://github.com/sujapriyas",
-    },
-    workExperience: [
-      {
-        position: "Integrated Software Engineering - 7.15",
-        company: "Vellore Institute of Technology",
-        duration: "07/2020 - Present",
-        description:
-          "Developed and maintained software solutions for academic management, medical warehouse maintenance, and music player control using IOT techniques.",
-        points: [
-          "Created the frontend using React Js for student performance tracking and course material management.",
-          "Developed the backend using Unity platform with Vuforia for AR-based warehouse management.",
-          "Implemented market basket analysis techniques to uncover patterns in transactional data.",
-          "Designed and implemented a movie recommendation system using Spring Boot, HTML, and CSS.",
-        ],
-      },
-    ],
-    skills: [
-      { title: "Backend", skills: "Java, Python, Hadoop, Hive" },
-      { title: "Frontend", skills: "React Js, HTML, CSS" },
-      {
-        title: "Machine Learning & AI",
-        skills: "Artificial Intelligence, Machine Learning",
-      },
-    ],
-  },
-};
 export const PDFPreview = () => {
-  const downloadResume = () => {};
+  const [info, setInfo] = useState("");
+  const [formatedResume, setFormatedResume] = useState<Resume>();
+  const generateResume = async () => {
+    const resp = (
+      await axios.post("http://localhost:8080/resume/ai", {
+        resume: info,
+      })
+    ).data as Resume;
+    console.log(resp);
+
+    setFormatedResume(resp);
+  };
 
   return (
     <div className="flex w-screen h-screen">
-      <div className="flex-1">Hello</div>
+      <div className="flex-1 p-4">
+        <div className="Paste your details">
+          Upload your Information in raw format
+        </div>
+        <Textarea
+          value={info}
+          onChange={(tf) => setInfo(tf.target.value)}
+        ></Textarea>
+
+        <Button onClick={generateResume}>Generate Resume</Button>
+      </div>
+
       <PDFViewer
         style={{
           height: "100vh",
@@ -322,7 +312,7 @@ export const PDFPreview = () => {
           backgroundColor: "#ffff",
         }}
       >
-        <Resume resume={resumeInfo} />
+        {formatedResume && <Resume resume={formatedResume} />}
       </PDFViewer>
     </div>
   );
