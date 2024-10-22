@@ -1,5 +1,6 @@
 import { Elysia, t } from "elysia";
 import { getResumeResult } from "./llm";
+import { cors } from "@elysiajs/cors";
 
 const resume = `Github: github.com/suryababus
 
@@ -58,6 +59,7 @@ Skills
 Software: (proficient)JavaScript, HTML/CSS, Java, React, Node, Git. (familier) c#, SQL, NOSQL, Flutter.`;
 
 new Elysia()
+  .use(cors())
   .post(
     "/resume/ai",
     async ({ body: { resume } }) => {
