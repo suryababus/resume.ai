@@ -53,11 +53,19 @@ interface Resume {
   resume: {
     name: string;
     position: string;
+    intro: string;
     communication: Communication;
     workExperience: WorkExperience[];
+    education: Education;
     skills: Skill[];
   };
 }
+
+interface Education {
+  collageName: string;
+  degree: string;
+}
+
 interface Skill {
   title: string;
   skills: string;
@@ -110,12 +118,7 @@ export default function Resume({ resume: resumeObj }: Props) {
 
         <View style={styles.section}>
           <Text style={{ ...styles.textSmall, marginTop: 2 }}>
-            Software engineering lead with ten years experience implementing
-            backend systems in C+t; led re-architecture of key platform that
-            serves 100,000 requests per month, increasing speed by 20 percent;
-            awarded the prestigious Most Impactful award, given to the top 5
-            percent of engineers based on total impact to firm; promoted two
-            times in 18 months, six months ahead of
+            {resume.intro}
           </Text>
         </View>
 
@@ -136,7 +139,7 @@ export default function Resume({ resume: resumeObj }: Props) {
               flex: 1,
             }}
           >
-            Bachelor of Engineering - Computer Science
+            {resume.education?.degree ?? ""}
           </Text>
           <Text
             style={{
@@ -145,7 +148,7 @@ export default function Resume({ resume: resumeObj }: Props) {
               flex: 1,
             }}
           >
-            Velammal Enginnering College, Chennai, Tamilnadu.
+            {resume.education?.collageName ?? ""}
           </Text>
         </View>
 
@@ -280,10 +283,17 @@ const WorkExperience = ({ workExp }: { workExp: WorkExperience }) => {
 export const PDFPreview = () => {
   const [info, setInfo] = useState("");
   const [formatedResume, setFormatedResume] = useState<Resume>();
+  const [jd, setJd] = useState("");
   const generateResume = async () => {
     const resp = (
       await axios.post("http://localhost:8080/resume/ai", {
-        resume: info,
+        resume: `
+        INFO OF THE APPLICANT:
+        ${info}
+        -------------------------------
+        INFO OF THE JOB APPLICANT APPLYING FOR:
+        ${jd}
+        `,
       })
     ).data as Resume;
     console.log(resp);
@@ -293,13 +303,23 @@ export const PDFPreview = () => {
 
   return (
     <div className="flex w-screen h-screen">
-      <div className="flex-1 p-4">
-        <div className="Paste your details">
-          Upload your Information in raw format
+      <div className="flex-1 p-2 ">
+        <div className="pb-2 font-bold">
+          Upload your Information in raw format:
         </div>
         <Textarea
+          className="mb-4 h-[30vh]"
           value={info}
           onChange={(tf) => setInfo(tf.target.value)}
+        ></Textarea>
+
+        <div className="pb-2 font-bold">
+          Upload Job discription in which you are applying for:
+        </div>
+        <Textarea
+          className="mb-4 h-[30vh]"
+          value={jd}
+          onChange={(tf) => setJd(tf.target.value)}
         ></Textarea>
 
         <Button onClick={generateResume}>Generate Resume</Button>

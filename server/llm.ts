@@ -22,6 +22,7 @@ export const getResumeResult = async (resume: string) => {
     ${resume}
     -------
   `;
+  console.log("testing");
 
   const outputJsonFormat = z.object({
     resume: z
@@ -31,6 +32,11 @@ export const getResumeResult = async (resume: string) => {
           .string()
           .describe(
             "Name of the current position of the applicant, eg 'Senior Software Engineer', 'SDE - 1', 'SDE - 2' ",
+          ),
+        intro: z
+          .string()
+          .describe(
+            "Resume introductions are brief statements that summarize the rest of your resume, highlighting your most relevant skills and qualifications. It's important to use a resume intro because it grabs the eye of the hiring manager. Make it match with JD.",
           ),
         communication: z
           .object({
@@ -69,6 +75,14 @@ export const getResumeResult = async (resume: string) => {
             ),
           }),
         ),
+        education: z
+          .object({
+            collageName: z
+              .string()
+              .describe("Name of the collage eg: Velammal Enginnering College"),
+            degree: z.string().describe("Name of the degree"),
+          })
+          .describe("Education details of the applicant"),
         skills: z
           .array(
             z.object({
@@ -86,7 +100,7 @@ export const getResumeResult = async (resume: string) => {
   });
 
   const result = await generateObject({
-    model: model("llama-3.1-70b-versatile"),
+    model: model("llama-3.2-90b-text-preview"),
     system: systemPrompt,
     prompt: "Give all the details in sections",
     schema: outputJsonFormat,
