@@ -99,12 +99,16 @@ export const getResumeResult = async (resume: string) => {
       .describe("Details of the resume"),
   });
 
-  const result = await generateObject({
-    model: model("llama-3.2-90b-text-preview"),
-    system: systemPrompt,
-    prompt: "Give all the details in sections",
-    schema: outputJsonFormat,
-  });
-
-  return result.object;
+  try {
+    const result = await generateObject({
+      model: model("deepseek-r1-distill-llama-70b"),
+      system: systemPrompt,
+      prompt: "Give all the details in sections",
+      schema: outputJsonFormat,
+    });
+    return result.object;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 };

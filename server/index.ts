@@ -63,7 +63,11 @@ new Elysia()
   .post(
     "/resume/ai",
     async ({ body: { resume } }) => {
-      return JSON.stringify(await getResumeResult(resume));
+      const result = await getResumeResult(resume);
+      console.log(result);
+
+
+      return JSON.stringify(result)
     },
     {
       body: t.Object({
