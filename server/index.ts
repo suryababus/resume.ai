@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { getResumeResult } from "./llm";
 import { cors } from "@elysiajs/cors";
+import { extractJobDescription } from "./linkedin";
 
 const resume = `Github: github.com/suryababus
 
@@ -65,13 +66,27 @@ new Elysia()
     async ({ body: { resume } }) => {
       const result = await getResumeResult(resume);
       console.log(result);
-
-
       return JSON.stringify(result)
     },
     {
       body: t.Object({
         resume: t.String(),
+      }),
+    },
+  )
+  .post(
+    "/linkedin/extract",
+    async ({ body: { url } }) => {
+      try {
+        const jobDescription = await extractJobDescription(url);
+        return JSON.stringify({ jobDescription });
+      } catch (error) {
+        return JSON.stringify({ error: "Failed to extract job description" });
+      }
+    },
+    {
+      body: t.Object({
+        url: t.String(),
       }),
     },
   )

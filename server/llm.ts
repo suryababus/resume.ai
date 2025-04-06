@@ -83,6 +83,17 @@ export const getResumeResult = async (resume: string) => {
             degree: z.string().describe("Name of the degree"),
           })
           .describe("Education details of the applicant"),
+        projects: z
+          .array(
+            z.object({
+              name: z.string().describe("Name of the project"),
+              description: z.string().describe("Brief explanation of the project. Make it elaborate and detailed."),
+              technologies: z.string().describe("Technologies used in the project"),
+              link: z.string().optional().describe("Link to the project repository or demo"),
+            })
+          )
+          .describe("Projects completed by the applicant"),
+          
         skills: z
           .array(
             z.object({
@@ -101,7 +112,7 @@ export const getResumeResult = async (resume: string) => {
 
   try {
     const result = await generateObject({
-      model: model("deepseek-r1-distill-llama-70b"),
+      model: model("meta-llama/llama-4-scout-17b-16e-instruct"),
       system: systemPrompt,
       prompt: "Give all the details in sections",
       schema: outputJsonFormat,

@@ -1,10 +1,9 @@
 "use client";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
-import { PDFViewer, Font } from "@react-pdf/renderer";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
+import { Document, Font, Page, PDFViewer, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { useState } from "react";
-import axios from "axios";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AIResumeForm } from "./ai-resume-form";
+import { JSONEditor } from "./json-editor";
 
 Font.register({
   family: "CormorantGaramond",
@@ -26,6 +25,7 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     backgroundColor: "#fff",
+    paddingTop: 10,
   },
   section: {
     marginHorizontal: 10,
@@ -57,6 +57,7 @@ interface Resume {
     communication: Communication;
     workExperience: WorkExperience[];
     education: Education;
+    projects: Project[];
     skills: Skill[];
   };
 }
@@ -64,6 +65,13 @@ interface Resume {
 interface Education {
   collageName: string;
   degree: string;
+}
+
+interface Project {
+  name: string;
+  description: string;
+  technologies: string;
+  link?: string;
 }
 
 interface Skill {
@@ -129,6 +137,28 @@ export default function Resume({ resume: resumeObj }: Props) {
           ))}
         </View>
 
+        {resume.projects && (
+        <View style={{ ...styles.section, marginBottom: 8 }}>
+          <SectionHeading title="Projects" />
+          {resume.projects.map((project, index) => (
+            <View key={index} style={{ marginTop: 8 }}>
+              <Text style={{ ...styles.textMedium, marginBottom: 2 }}>
+                {project.name}
+                {project.link && (
+                  <Text style={{ ...styles.textSmall }}> - {project.link}</Text>
+                )}
+              </Text>
+              <Text style={{ ...styles.textSmall, marginBottom: 2 }}>
+                {project.description}
+              </Text>
+              <Text style={{ ...styles.textSmall }}>
+                Technologies: {project.technologies}
+              </Text>
+            </View>
+          ))}
+        </View>
+        )}
+
         <View style={{ ...styles.section, marginBottom: 8 }}>
           <SectionHeading title="Education" />
           <Text
@@ -151,7 +181,7 @@ export default function Resume({ resume: resumeObj }: Props) {
             {resume.education?.collageName ?? ""}
           </Text>
         </View>
-
+            
         <View style={{ ...styles.section, fontWeight: 700 }}>
           <SectionHeading title="Skills & Other" />
 
@@ -280,60 +310,111 @@ const WorkExperience = ({ workExp }: { workExp: WorkExperience }) => {
   );
 };
 
+const serverPath = "http://localhost:8080";
+
 export const PDFPreview = () => {
   const [info, setInfo] = useState("");
-  const [formatedResume, setFormatedResume] = useState<Resume>();
   const [jd, setJd] = useState("");
+  const [linkedinUrl, setLinkedinUrl] = useState("");
+  const [formatedResume, setFormatedResume] = useState<Resume | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [jsonString, setJsonString] = useState("");
+
+  const extractLinkedInJob = async () => {
+    if (!linkedinUrl) return;
+
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${serverPath}/linkedin?url=${linkedinUrl}`);
+      const jobDescription = await resp.text();
+      setJd(jobDescription);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const generateResume = async () => {
-    const resp = (
-      await axios.post("http://localhost:8080/resume/ai", {
-        resume: `
+    try {
+      const response = await fetch(`${serverPath}/resume/ai`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          resume: `
         INFO OF THE APPLICANT:
         ${info}
         -------------------------------
         INFO OF THE JOB APPLICANT APPLYING FOR:
         ${jd}
         `,
-      })
-    ).data as Resume;
-    console.log(resp);
+        }),
+      });
+      
+      const data = await response.json();
+      console.log(data);
+      
+      setFormatedResume(data);
+      setJsonString(JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error("Error generating resume:", error);
+    }
+  };
 
-    setFormatedResume(resp);
+  const updateResumeFromJson = () => {
+    try {
+      const parsedJson = JSON.parse(jsonString);
+      setFormatedResume(parsedJson);
+    } catch (error) {
+      console.error("Invalid JSON:", error);
+      alert("Invalid JSON format. Please check your input.");
+    }
   };
 
   return (
     <div className="flex w-screen h-screen">
-      <div className="flex-1 p-2 ">
-        <div className="pb-2 font-bold">
-          Upload your Information in raw format:
-        </div>
-        <Textarea
-          className="mb-4 h-[30vh]"
-          value={info}
-          onChange={(tf) => setInfo(tf.target.value)}
-        ></Textarea>
-
-        <div className="pb-2 font-bold">
-          Upload Job discription in which you are applying for:
-        </div>
-        <Textarea
-          className="mb-4 h-[30vh]"
-          value={jd}
-          onChange={(tf) => setJd(tf.target.value)}
-        ></Textarea>
-
-        <Button onClick={generateResume}>Generate Resume</Button>
+      <div className="flex-1 p-2">
+        <Tabs defaultValue="generate">
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="generate" className="flex-1">Generate Resume with AI</TabsTrigger>
+            <TabsTrigger value="edit" className="flex-1">Edit the Generated JSON</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="generate">
+            <AIResumeForm 
+              info={info}
+              setInfo={setInfo}
+              jd={jd}
+              setJd={setJd}
+              linkedinUrl={linkedinUrl}
+              setLinkedinUrl={setLinkedinUrl}
+              isLoading={isLoading}
+              extractLinkedInJob={extractLinkedInJob}
+              generateResume={generateResume}
+            />
+          </TabsContent>
+          
+          <TabsContent value="edit">
+            <JSONEditor 
+              jsonString={jsonString}
+              setJsonString={setJsonString}
+              updateResumeFromJson={updateResumeFromJson}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
 
-      <PDFViewer
-        style={{
-          height: "100vh",
-          width: "50%",
-          backgroundColor: "#ffff",
-        }}
-      >
-        {formatedResume && <Resume resume={formatedResume} />}
-      </PDFViewer>
+        <PDFViewer
+          style={{
+            height: "100vh",
+            width: "50%",
+            backgroundColor: "#ffff",
+          }}
+        >
+          {formatedResume ? <Resume resume={formatedResume} /> : null}
+        </PDFViewer>
     </div>
   );
 };

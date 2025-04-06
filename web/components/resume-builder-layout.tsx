@@ -14,6 +14,7 @@ export default function ResumeBuilder() {
     summary: "",
     experience: "",
     education: "",
+    projects: "",
     skills: "",
   });
 
@@ -95,6 +96,16 @@ export default function ResumeBuilder() {
             />
           </div>
           <div>
+            <Label htmlFor="projects">Projects</Label>
+            <Textarea
+              id="projects"
+              name="projects"
+              value={resumeData.projects}
+              onChange={handleInputChange}
+              placeholder="List your notable projects"
+            />
+          </div>
+          <div>
             <Label htmlFor="skills">Skills</Label>
             <Textarea
               id="skills"
@@ -139,6 +150,13 @@ export default function ResumeBuilder() {
             <section className="mb-6">
               <h3 className="text-xl font-semibold mb-2">Education</h3>
               <p>{resumeData.education}</p>
+            </section>
+          )}
+
+          {resumeData.projects && (
+            <section className="mb-6">
+              <h3 className="text-xl font-semibold mb-2">Projects</h3>
+              <p>{resumeData.projects}</p>
             </section>
           )}
 
